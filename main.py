@@ -6,7 +6,7 @@ import random as rand
 
 # GAME SETTINGS
 SPEED = 6
-UNIT = 45
+UNIT = 40
 WIDTH = 32
 HEIGHT = 18
 
