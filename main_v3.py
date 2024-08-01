@@ -253,7 +253,7 @@ class Game:
             # get key pressed
             self.get_direction()
 
-            # change direction and detect collision
+            # change direction and detect collision (6 times per second)
             if count%(60//self.SPEED) == 0:
                 self.direction = self.temp_direction
                 self.snake.change_direction(self.direction)
@@ -272,6 +272,52 @@ class Game:
 
         pg.quit()
 
+class App:
+    WIDTH = 32
+    HEIGHT = 18
+    UNIT = 40
+    screen_size = (WIDTH*UNIT, HEIGHT*UNIT)
 
-mon_jeu = Game()
-mon_jeu.play()
+    def __init__(self):
+        pg.init()
+        self.screen = pg.display.set_mode(self.screen_size)
+        self.clock = pg.time.Clock()
+        self.main_menu()
+    
+    def draw_menu(self):
+        u = self.UNIT
+        self.screen.fill((20, 20, 30))
+        
+        for i_lig in range(self.HEIGHT):
+            for i_col in range(self.WIDTH):
+                pg.draw.rect(self.screen, (24, 24, 34), [i_col*u, i_lig*u, u, u])
+
+        mouse = pg.mouse.get_pos()
+        
+        play_triangle = [(15*u, 8*u), (17*u, 9*u), (15*u, 10*u)]
+        play_square = [14*u, 7*u, 4*u, 4*u]
+        if 14*u <= mouse[0] <= 18*u and 7*u <= mouse[1]<= 11*u: # focused (in the square)
+            pg.draw.rect(self.screen, (245, 245, 255), play_square)
+        else:
+            pg.draw.rect(self.screen, (180, 180, 190), play_square)
+        pg.draw.polygon(self.screen, (30, 30, 40), play_triangle)
+    
+    def main_menu(self):
+        condition = True
+        compteur = 0
+        while condition:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    condition = False
+
+            self.draw_menu()
+            pg.display.flip()
+
+            compteur += 1
+            self.clock.tick(60)
+        pg.quit()
+
+
+
+
+t = App()
