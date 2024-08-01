@@ -187,7 +187,8 @@ class Game:
         # draw apple
         pg.draw.rect(self.screen, (230, 50, 50), pg.Rect((self.apple[0]*u, self.apple[1]*u), unit_square))
 
-    def death_animation(self)-> None:
+    def death_animation(self) -> None:
+        self.snake.alive = False
         mouvs = [1, -0.5, -0.5, -1, -1, -1, -0.5, -0.5, 1, 1, 1, 1]
         dx, dy = self.dico[self.direction]
         head_pos = self.snake.positions[0]
@@ -204,16 +205,22 @@ class Game:
         # move the head
         self.snake.head_pos[0] += self.dico[self.direction][0]
         self.snake.head_pos[1] += self.dico[self.direction][1]
-        self.snake.head_pos[0] %= self.WIDTH
-        self.snake.head_pos[1] %= self.HEIGHT
 
         head_x, head_y = self.snake.head_pos
-        # collision
-        if self.grid[head_y][head_x] == "S":
+        self.detect_collision()
+        if self.snake.alive:
+            self.grid[head_y][head_x] = "S"
+
+    def detect_collision(self):
+        head_x, head_y = self.snake.head_pos
+        # out of frame
+        if head_x < 0 or head_x >= self.WIDTH or head_y < 0 or head_y >= self.HEIGHT:
             self.death_animation()
+        # hits its body
+        elif self.grid[head_y][head_x] == "S":
             self.snake.alive = False
-        
-        self.grid[head_y][head_x] = "S"
+            self.death_animation()
+
 
     def detect_apple(self) -> int:
         if self.snake.head_pos == self.apple: # apple eaten
@@ -223,11 +230,10 @@ class Game:
         
     def move_tail(self):
         self.grid[self.snake.tail_pos[1]][self.snake.tail_pos[0]] = " "
+        dx, dy = self.dico[self.snake.directions[-1]]
 
-        self.snake.tail_pos[0] += self.dico[self.snake.directions[-1]][0]
-        self.snake.tail_pos[1] += self.dico[self.snake.directions[-1]][1]
-        self.snake.tail_pos[0] %= self.WIDTH
-        self.snake.tail_pos[1] %= self.HEIGHT
+        self.snake.tail_pos[0] += dx
+        self.snake.tail_pos[1] += dy
         return 0
 
     def play(self):
