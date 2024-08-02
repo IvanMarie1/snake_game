@@ -62,6 +62,11 @@ class Snake:
             player_pos.y = (self.HEIGHT-1)*u
 
 
+
+
+
+
+
 class Game:
     # GAME SETTINGS
     SPEED = 6
@@ -91,6 +96,8 @@ class Game:
 
         # create an apple
         self.apple = [24, 8]
+        self.running = True
+        self.play()
 
 
     def get_direction(self) -> None:
@@ -132,22 +139,38 @@ class Game:
 
         en_pause = True
         while en_pause:
+            # check the click
             mouse = pg.mouse.get_pos()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
                 if event.type == pg.MOUSEBUTTONDOWN:
+                    # play button
                     if u*14 <= mouse[0] <= u*18 and u*7 <= mouse[1]<= u*11:
                         en_pause = False
+                    # menu button
+                    if 8*u <= mouse[0] <= 12*u and 7*u <= mouse[1] <= 11*u:
+                        en_pause = False
+                        self.running = False
+
             
             # draw the play button
             triangle = [(15*u, 8*u), (17*u, 9*u), (15*u, 10*u)]
-            square = [14*u, 7*u, 4*u, 4*u]
+            play_square = [14*u, 7*u, 4*u, 4*u]
             if 14*u <= mouse[0] <= 18*u and 7*u <= mouse[1]<= 11*u: # focused (in the square)
-                pg.draw.rect(pause_surface, (245, 245, 255), square)
+                pg.draw.rect(pause_surface, (245, 245, 255), play_square)
             else:
-                pg.draw.rect(pause_surface, (180, 180, 190), square)
+                pg.draw.rect(pause_surface, (180, 180, 190), play_square)
             pg.draw.polygon(pause_surface, (30, 30, 40), triangle)
+
+            # draw the menu button
+            menu_square = [8*u, 7*u, 4*u, 4*u]
+            if 8*u <= mouse[0] <= 12*u and 7*u <= mouse[1] <= 11*u:
+                pg.draw.rect(pause_surface, (245, 245, 255), menu_square)
+            else:
+                pg.draw.rect(pause_surface, (180, 180, 190), menu_square)
+            for i in range(3):
+                pg.draw.rect(pause_surface, (30, 30, 40), [9*u, 8*u + 2*i*16, 2*u, 16])
 
             
             self.draw_screen()
@@ -238,11 +261,10 @@ class Game:
 
     def play(self):
         count = 0
-        running = True
-        while running:
+        while self.running:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    running = False
+                    pg.quit()
 
             if not self.snake.alive:
                 self.clock.tick(60)
@@ -270,7 +292,11 @@ class Game:
             self.clock.tick(60)
             count += 1
 
-        pg.quit()
+
+
+
+
+
 
 class App:
     WIDTH = 32
@@ -284,33 +310,67 @@ class App:
         self.clock = pg.time.Clock()
         self.main_menu()
     
-    def draw_menu(self):
+    def draw_menu(self, i_selected: int = 0):
+        font = pg.font.Font('MINECRAFT.TTF', 40)
+        font_title = pg.font.Font('MINECRAFT.TTF', 80)
+
         u = self.UNIT
-        self.screen.fill((20, 20, 30))
         
+        self.screen.fill((20, 20, 30))
         for i_lig in range(self.HEIGHT):
             for i_col in range(self.WIDTH):
-                pg.draw.rect(self.screen, (24, 24, 34), [i_col*u, i_lig*u, u, u])
+                if (i_lig+i_col)%2 == 0:
+                    pg.draw.rect(self.screen, (24, 24, 34), [i_col*u, i_lig*u, u, u])
+
+        title = font_title.render("SNAKE GAME", True, (255, 255, 255))
+        self.screen.blit(title, title.get_rect(center=(16*u, 5*u)))
+
+        texts = ["Play", "Commands", "About"]
+        colors = [(200, 200, 230)] * 3
+        texts[i_selected] = "> " + texts[i_selected]
+        colors[i_selected] = (255, 255, 255)
+        for i_msg in range(3):
+            msg = font.render(texts[i_msg], True, colors[i_msg])
+            self.screen.blit(msg, msg.get_rect(topleft=( 6*u, (10+2*i_msg)*u )))
 
         mouse = pg.mouse.get_pos()
         
-        play_triangle = [(15*u, 8*u), (17*u, 9*u), (15*u, 10*u)]
-        play_square = [14*u, 7*u, 4*u, 4*u]
-        if 14*u <= mouse[0] <= 18*u and 7*u <= mouse[1]<= 11*u: # focused (in the square)
-            pg.draw.rect(self.screen, (245, 245, 255), play_square)
+        if 14*u <= mouse[0] <= 18*u and 7*u <= mouse[1]<= 11*u: # focused 
+            pass
         else:
-            pg.draw.rect(self.screen, (180, 180, 190), play_square)
-        pg.draw.polygon(self.screen, (30, 30, 40), play_triangle)
+            pass
     
     def main_menu(self):
         condition = True
         compteur = 0
+        i_selected = 0
+        temp_command = ""
         while condition:
+            mouse = pg.mouse.get_pos()
+            keys = pg.key.get_pressed()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     condition = False
+            if keys[pg.K_UP] or keys[pg.K_z]:
+                temp_command = "UP"
+            elif keys[pg.K_DOWN] or keys[pg.K_s]:
+                temp_command = "DOWN"
+            elif keys[pg.K_SPACE] or keys[pg.K_KP_ENTER]:
+                temp_command = "ENTER"
 
-            self.draw_menu()
+            if compteur%20 == 0:
+                if temp_command == "UP":
+                    i_selected -= 1
+                elif temp_command == "DOWN":
+                    i_selected += 1
+                i_selected %= 3
+                if temp_command == "ENTER":
+                    if i_selected == 0:
+                        Game()
+                temp_command = ""
+
+
+            self.draw_menu(i_selected)
             pg.display.flip()
 
             compteur += 1
@@ -318,6 +378,4 @@ class App:
         pg.quit()
 
 
-
-
-t = App()
+App()
